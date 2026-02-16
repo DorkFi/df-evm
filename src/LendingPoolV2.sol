@@ -191,7 +191,8 @@ contract LendingPoolV2 {
 
     /// @notice Set the borrow-only SToken market ID (owner only). Use type(uint64).max to clear.
     function setStokenMarketId(uint64 marketId) external onlyOwner {
-        if (marketId != type(uint64).max && !markets[marketId].exists) revert MarketNotFound();
+        if (marketId != type(uint64).max && !markets[marketId].exists)
+            revert MarketNotFound();
         stokenMarketId = marketId;
     }
 
@@ -235,7 +236,10 @@ contract LendingPoolV2 {
     }
 
     /// @notice Withdraw accrued reserves for a market. For SToken (borrow-only) market, mints to owner; otherwise transfers from pool.
-    function withdrawReserves(uint64 marketId, uint256 amount) external onlyOwner {
+    function withdrawReserves(
+        uint64 marketId,
+        uint256 amount
+    ) external onlyOwner {
         MarketData storage m = markets[marketId];
         if (!m.exists) revert MarketNotFound();
         if (amount > m.reserves) revert InsufficientReserves();
@@ -341,7 +345,7 @@ contract LendingPoolV2 {
     function _calculateUserInterest(
         address user,
         uint64 marketId
-    ) internal returns (uint256) {
+    ) internal view returns (uint256) {
         UserMarketData storage u = userMarketData[marketId][user];
         if (u.scaledDeposits == 0) return 0;
 
@@ -361,7 +365,7 @@ contract LendingPoolV2 {
     function _calculateUserDebtInterest(
         address user,
         uint64 marketId
-    ) internal returns (uint256) {
+    ) internal view returns (uint256) {
         UserMarketData storage u = userMarketData[marketId][user];
         if (u.scaledBorrows == 0) return 0;
 
@@ -517,7 +521,10 @@ contract LendingPoolV2 {
     }
 
     /// @notice Sync user market for price change (accrue interest, resolve interest, update globals).
-    function syncUserMarketForPriceChange(address user, uint64 marketId) external {
+    function syncUserMarketForPriceChange(
+        address user,
+        uint64 marketId
+    ) external {
         _syncUserMarketForPriceChange(user, marketId);
     }
 
@@ -670,7 +677,8 @@ contract LendingPoolV2 {
 
     /// @notice Internal deposit: add ERC20 to a market and update collateral.
     function _deposit(address user, uint64 marketId, uint256 amount) internal {
-        if (_isStokenMarket(marketId)) revert CannotUseStokenMarketForThisOperation();
+        if (_isStokenMarket(marketId))
+            revert CannotUseStokenMarketForThisOperation();
         MarketData storage m = markets[marketId];
         if (!m.exists) revert MarketNotFound();
         if (m.paused) revert MarketPaused();
@@ -708,7 +716,8 @@ contract LendingPoolV2 {
     /// @dev Health check uses the withdrawing market's collateral factor for the user's total
     ///      remaining collateral, so low-CF market exposure requires higher over-collateralization.
     function _withdraw(address user, uint64 marketId, uint256 amount) internal {
-        if (_isStokenMarket(marketId)) revert CannotUseStokenMarketForThisOperation();
+        if (_isStokenMarket(marketId))
+            revert CannotUseStokenMarketForThisOperation();
         MarketData storage m = markets[marketId];
         if (!m.exists) revert MarketNotFound();
         if (m.paused) revert MarketPaused();
@@ -958,7 +967,8 @@ contract LendingPoolV2 {
         uint256 repayAmount,
         uint256 minCollateralReceived
     ) internal {
-        if (_isStokenMarket(collateralMarketId)) revert StokenMarketCannotBeCollateral();
+        if (_isStokenMarket(collateralMarketId))
+            revert StokenMarketCannotBeCollateral();
 
         if (user == liquidator) revert Unauthorized();
 
@@ -1070,7 +1080,8 @@ contract LendingPoolV2 {
         if (_isStokenMarket(marketId)) {
             utilization = SCALE; // 100% for borrow-only market
             uint256 rate = m.params.borrowRate +
-                (m.params.slope * utilization) / SCALE;
+                (m.params.slope * utilization) /
+                SCALE;
             uint256 interest = (rate * totalBorrows * elapsed) /
                 (SECONDS_PER_YEAR * SCALE);
             toReserves = interest;
@@ -1080,7 +1091,8 @@ contract LendingPoolV2 {
                 ? 0
                 : (totalBorrows * SCALE) / totalDeposits;
             uint256 rate = m.params.borrowRate +
-                (m.params.slope * utilization) / SCALE;
+                (m.params.slope * utilization) /
+                SCALE;
             uint256 interest = (rate * totalBorrows * elapsed) /
                 (SECONDS_PER_YEAR * SCALE);
             toReserves = (interest * m.params.reserveFactor) / SCALE;
@@ -1089,7 +1101,9 @@ contract LendingPoolV2 {
 
         m.reserves += toReserves;
         if (m.totalScaledBorrows > 0) {
-            m.borrowIndex += ((toReserves + toDepositors) * SCALE) / m.totalScaledBorrows;
+            m.borrowIndex +=
+                ((toReserves + toDepositors) * SCALE) /
+                m.totalScaledBorrows;
         }
         if (m.totalScaledDeposits > 0 && toDepositors > 0) {
             m.depositIndex += (toDepositors * SCALE) / m.totalScaledDeposits;

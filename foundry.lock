@@ -4,5 +4,11 @@
       "name": "v1.14.0",
       "rev": "1801b0541f4fda118a10798fd3486bb7051c5dd6"
     }
+  },
+  "lib/hedera-smart-contracts": {
+    "branch": {
+      "name": "main",
+      "rev": "c64542c52f2a467cc7bcb73ffce712544b3f633e"
+    }
   }
 }
