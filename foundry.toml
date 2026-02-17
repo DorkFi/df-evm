@@ -14,4 +14,17 @@ via_ir = true
 optimizer = true
 optimizer_runs = 200
 
+# -----------------------------------------------------------------------------
+# Deployment targets (use: FOUNDRY_PROFILE=<profile> forge script ... --rpc-url <endpoint>)
+# -----------------------------------------------------------------------------
+[profile.base-sepolia]
+chain_id = 84532
+
+[profile.hedera-testnet]
+chain_id = 296
+
+[rpc_endpoints]
+base_sepolia = "https://sepolia.base.org"
+hedera_testnet = "https://testnet.hashio.io/api"
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

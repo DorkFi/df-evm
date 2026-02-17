@@ -40,7 +40,7 @@ source .env
 
 # Deploy (MockOracle, LendingPoolV2Hedera, ATokens, SToken, markets, oracle prices)
 forge script script/LendingPoolV2Hedera.s.sol:LendingPoolV2HederaScript \
-  --rpc-url https://testnet.hashio.io/api \
+  --rpc-url https://296.rpc.thirdweb.com \
   --broadcast \
   --chain-id 296 \
   --private-key $PRIVATE_KEY
@@ -146,6 +146,34 @@ Fill `contracts` and `tokens` from your deploy script output and any tokens you 
 | **Wrong network** | Use `--chain-id 296` and RPC `https://testnet.hashio.io/api` |
 | **RPC timeouts** | Try alternate RPC: `https://296.rpc.thirdweb.com` |
 | **`Unauthorized()` on createMarket** | Run config with the same private key as the deployer (pool owner) |
+| **Many txs fail with "Transaction Failure" / Paid: 0 ETH** | Often **gas price below base fee**. Use `--slow` and a higher gas price (see below). |
+| **"gas price is less than basefee"** (when replaying) | Hedera’s base fee can move; broadcast with an explicit higher gas price. |
+
+### If most transactions fail (only first 1–2 succeed)
+
+Hedera testnet can reject later transactions in a batch when:
+
+1. **Gas price below base fee** – The RPC may return a lower gas price than the next block’s base fee, so later txs get rejected (they show as failed with 0 gas used).
+2. **Too many txs sent at once** – Nonce/ordering can get messy when many txs are in the mempool.
+
+**Recommended deploy command:**
+
+```bash
+source .env
+
+forge script script/LendingPoolV2Hedera.s.sol:LendingPoolV2HederaScript \
+  --rpc-url https://296.rpc.thirdweb.com \
+  --broadcast \
+  --chain-id 296 \
+  --private-key $PRIVATE_KEY \
+  --slow \
+  --with-gas-price 880000000000
+```
+
+- **`--slow`** – Sends one transaction at a time and waits for confirmation before the next. More reliable on Hedera.
+- **`--with-gas-price 880000000000`** – Hedera testnet RPCs often enforce a **minimum of 880 gwei**. Use at least this; if you see "below configured minimum gas price", use the value from the error message or slightly higher (e.g. `900000000000`).
+
+Alternative RPC if thirdweb is flaky: `--rpc-url https://testnet.hashio.io/api`
 
 ---
 
