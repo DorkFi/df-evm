@@ -11,6 +11,7 @@
 | Base Sepolia    | `base-sepolia`    | `base_sepolia`  |
 | Hedera Testnet  | `hedera-testnet`  | `hedera_testnet`|
 | Monad Testnet   | `monad-testnet`   | `monad_testnet` |
+| 0G Testnet      | `og-testnet`      | `og_testnet`    |
 
 ---
 
@@ -37,6 +38,15 @@ FOUNDRY_PROFILE=hedera-testnet DEPLOY_TARGET=hedera-testnet forge script script/
 ```bash
 source .env
 FOUNDRY_PROFILE=monad-testnet DEPLOY_TARGET=monad-testnet forge script script/Deploy.s.sol:DeployScript --rpc-url monad_testnet --broadcast --private-key $PRIVATE_KEY --sender $(cast wallet address $PRIVATE_KEY)
+```
+
+### 0G Testnet
+
+0G testnet uses EIP-1559; set both `--with-gas-price 2000000000` and `--priority-gas-price 2000000000` so priority ≤ max.
+
+```bash
+source .env
+FOUNDRY_PROFILE=og-testnet DEPLOY_TARGET=og-testnet forge script script/Deploy.s.sol:DeployScript --rpc-url og_testnet --broadcast --private-key $PRIVATE_KEY --sender $(cast wallet address $PRIVATE_KEY) --with-gas-price 2000000000 --priority-gas-price 2000000000
 ```
 
 ---
@@ -66,6 +76,13 @@ source .env
 FOUNDRY_PROFILE=monad-testnet forge script script/LendingPoolV2Monad.s.sol:LendingPoolV2MonadScript --rpc-url monad_testnet --broadcast --private-key $PRIVATE_KEY --sender $(cast wallet address $PRIVATE_KEY)
 ```
 
+### 0G Testnet
+
+```bash
+source .env
+FOUNDRY_PROFILE=og-testnet forge script script/LendingPoolV2OG.s.sol:LendingPoolV2OGScript --rpc-url og_testnet --broadcast --private-key $PRIVATE_KEY --sender $(cast wallet address $PRIVATE_KEY) --with-gas-price 2000000000 --priority-gas-price 2000000000
+```
+
 ---
 
 ## Dry run (no broadcast)
@@ -83,6 +100,9 @@ FOUNDRY_PROFILE=hedera-testnet DEPLOY_TARGET=hedera-testnet forge script script/
 
 # Monad Testnet
 FOUNDRY_PROFILE=monad-testnet DEPLOY_TARGET=monad-testnet forge script script/Deploy.s.sol:DeployScript --rpc-url monad_testnet
+
+# 0G Testnet
+FOUNDRY_PROFILE=og-testnet DEPLOY_TARGET=og-testnet forge script script/Deploy.s.sol:DeployScript --rpc-url og_testnet
 ```
 
 **Per-target:**
@@ -93,6 +113,8 @@ FOUNDRY_PROFILE=base-sepolia forge script script/LendingPoolV2.s.sol:LendingPool
 FOUNDRY_PROFILE=hedera-testnet forge script script/LendingPoolV2Hedera.s.sol:LendingPoolV2HederaScript --rpc-url hedera_testnet
 
 FOUNDRY_PROFILE=monad-testnet forge script script/LendingPoolV2Monad.s.sol:LendingPoolV2MonadScript --rpc-url monad_testnet
+
+FOUNDRY_PROFILE=og-testnet forge script script/LendingPoolV2OG.s.sol:LendingPoolV2OGScript --rpc-url og_testnet
 ```
 
 ---

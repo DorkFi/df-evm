@@ -26,9 +26,13 @@ chain_id = 296
 [profile.monad-testnet]
 chain_id = 10143
 
+[profile.og-testnet]
+chain_id = 16602
+
 [rpc_endpoints]
 base_sepolia = "https://sepolia.base.org"
 hedera_testnet = "https://testnet.hashio.io/api"
 monad_testnet = "https://testnet-rpc.monad.xyz"
+og_testnet = "https://evmrpc-testnet.0g.ai"
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
