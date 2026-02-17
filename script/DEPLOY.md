@@ -10,6 +10,7 @@
 |-----------------|-------------------|-----------------|
 | Base Sepolia    | `base-sepolia`    | `base_sepolia`  |
 | Hedera Testnet  | `hedera-testnet`  | `hedera_testnet`|
+| Monad Testnet   | `monad-testnet`   | `monad_testnet` |
 
 ---
 
@@ -29,6 +30,13 @@ FOUNDRY_PROFILE=base-sepolia DEPLOY_TARGET=base-sepolia forge script script/Depl
 ```bash
 source .env
 FOUNDRY_PROFILE=hedera-testnet DEPLOY_TARGET=hedera-testnet forge script script/Deploy.s.sol:DeployScript --rpc-url hedera_testnet --broadcast --private-key $PRIVATE_KEY --sender $(cast wallet address $PRIVATE_KEY)
+```
+
+### Monad Testnet
+
+```bash
+source .env
+FOUNDRY_PROFILE=monad-testnet DEPLOY_TARGET=monad-testnet forge script script/Deploy.s.sol:DeployScript --rpc-url monad_testnet --broadcast --private-key $PRIVATE_KEY --sender $(cast wallet address $PRIVATE_KEY)
 ```
 
 ---
@@ -51,6 +59,13 @@ source .env
 FOUNDRY_PROFILE=hedera-testnet forge script script/LendingPoolV2Hedera.s.sol:LendingPoolV2HederaScript --rpc-url hedera_testnet --broadcast --private-key $PRIVATE_KEY --sender $(cast wallet address $PRIVATE_KEY)
 ```
 
+### Monad Testnet
+
+```bash
+source .env
+FOUNDRY_PROFILE=monad-testnet forge script script/LendingPoolV2Monad.s.sol:LendingPoolV2MonadScript --rpc-url monad_testnet --broadcast --private-key $PRIVATE_KEY --sender $(cast wallet address $PRIVATE_KEY)
+```
+
 ---
 
 ## Dry run (no broadcast)
@@ -65,6 +80,9 @@ FOUNDRY_PROFILE=base-sepolia DEPLOY_TARGET=base-sepolia forge script script/Depl
 
 # Hedera Testnet
 FOUNDRY_PROFILE=hedera-testnet DEPLOY_TARGET=hedera-testnet forge script script/Deploy.s.sol:DeployScript --rpc-url hedera_testnet
+
+# Monad Testnet
+FOUNDRY_PROFILE=monad-testnet DEPLOY_TARGET=monad-testnet forge script script/Deploy.s.sol:DeployScript --rpc-url monad_testnet
 ```
 
 **Per-target:**
@@ -73,6 +91,8 @@ FOUNDRY_PROFILE=hedera-testnet DEPLOY_TARGET=hedera-testnet forge script script/
 FOUNDRY_PROFILE=base-sepolia forge script script/LendingPoolV2.s.sol:LendingPoolV2Script --rpc-url base_sepolia
 
 FOUNDRY_PROFILE=hedera-testnet forge script script/LendingPoolV2Hedera.s.sol:LendingPoolV2HederaScript --rpc-url hedera_testnet
+
+FOUNDRY_PROFILE=monad-testnet forge script script/LendingPoolV2Monad.s.sol:LendingPoolV2MonadScript --rpc-url monad_testnet
 ```
 
 ---
