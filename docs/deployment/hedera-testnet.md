@@ -2,6 +2,8 @@
 
 This document describes how to deploy DorkFi **LendingPoolV2Hedera** and MockOracle to **Hedera Testnet**. Hedera uses a dedicated pool contract (`LendingPoolV2Hedera`) that extends `LendingPoolV2` with chain-specific logic; deployment uses the Hedera script and HBAR for gas.
 
+For the **keeper** (periodic scheduled work via Hedera Schedule Service), see [Hedera Keeper Lifecycle](./hedera-keeper-lifecycle.md).
+
 ---
 
 ## 1) Prerequisites
@@ -163,6 +165,16 @@ source .env
 
 forge script script/LendingPoolV2Hedera.s.sol:LendingPoolV2HederaScript \
   --rpc-url https://296.rpc.thirdweb.com \
+  --broadcast \
+  --chain-id 296 \
+  --private-key $PRIVATE_KEY \
+  --slow \
+  --with-gas-price 880000000000
+
+or
+
+fqorge script script/LendingPoolV2Hedera.s.sol:LendingPoolV2HederaScript \
+  --rpc-url https://testnet.hashio.io/api \
   --broadcast \
   --chain-id 296 \
   --private-key $PRIVATE_KEY \

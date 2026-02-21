@@ -8,11 +8,15 @@ import {MockOracle} from "../src/MockOracle.sol";
 
 /// @notice Deploys LendingPoolV2Hedera + MockOracle + markets for Hedera Testnet.
 /// @dev Run: FOUNDRY_PROFILE=hedera-testnet forge script script/LendingPoolV2Hedera.s.sol:LendingPoolV2HederaScript --rpc-url hedera_testnet --broadcast
+// @dev Optional: set HEDERA_DEPLOY_VALUE (wei) to send HBAR to the pool at deployment (e.g. for keeper scheduling gas).
 contract LendingPoolV2HederaScript is LendingPoolV2DeployBase {
     function run() public {
+        //uint256 deployValue = vm.envOr("HEDERA_DEPLOY_VALUE", uint256(0));
+
         vm.startBroadcast();
 
         MockOracle oracle = new MockOracle();
+        //LendingPoolV2Hedera pool = new LendingPoolV2Hedera{value: deployValue}(address(oracle));
         LendingPoolV2Hedera pool = new LendingPoolV2Hedera(address(oracle));
 
         DeployResult memory r = _deployAndConfigureMarkets(LendingPoolV2(address(pool)), oracle);

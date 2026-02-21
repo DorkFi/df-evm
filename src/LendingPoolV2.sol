@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.31;
 
 import {IOracleRouter} from "./interfaces/IOracleRouter.sol";
 import {IERC20Permit} from "./interfaces/IERC20Permit.sol";

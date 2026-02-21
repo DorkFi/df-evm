@@ -8,8 +8,8 @@ import {
     HederaResponseCodes
 } from "@hashgraph/smart-contracts/contracts/system-contracts/HederaResponseCodes.sol";
 import {
-    PrngSystemContract
-} from "@hashgraph/smart-contracts/contracts/system-contracts/pseudo-random-number-generator/PrngSystemContract.sol";
+    IPrngSystemContract
+} from "@hashgraph/smart-contracts/contracts/system-contracts/pseudo-random-number-generator/IPrngSystemContract.sol";
 
 import {LendingPoolV2} from "./LendingPoolV2.sol";
 
@@ -39,20 +39,35 @@ contract LendingPoolV2Hedera is LendingPoolV2, HederaScheduleService {
 
     mapping(uint64 => KeeperConfig) public keeperConfigs;
 
-    event KeeperStarted(uint256 intervalSeconds, uint256 firstScheduledAt);
+    event KeeperStarted(
+        uint64 marketId,
+        uint256 intervalSeconds,
+        uint256 firstScheduledAt
+    );
     event KeeperScheduled(
+        uint64 marketId,
         uint256 chosenTime,
         uint256 desiredTime,
         address scheduleAddres
     );
-    event KeeperExecuted(uint256 timestamp, uint256 count);
-    event KeeperStopped();
+    event KeeperExecuted(uint64 marketId, uint256 timestamp, uint256 count);
+    event KeeperStopped(uint64 marketId);
 
     // -------------------------------------------------------------------------
     // Constructor
     // -------------------------------------------------------------------------
     constructor(address _oracle) payable LendingPoolV2(_oracle) {}
     receive() external payable {}
+
+    function _getPseudorandomSeed() internal returns (bytes32 seed) {
+        (bool ok, bytes memory ret) = address(0x169).call(
+            abi.encodeWithSelector(
+                IPrngSystemContract.getPseudorandomSeed.selector
+            )
+        );
+        require(ok && ret.length >= 32, "PRNG unavailable");
+        seed = abi.decode(ret, (bytes32));
+    }
 
     // -------------------------------------------------------------------------
     // Hedera-specific logic (add implementations below)
@@ -74,19 +89,43 @@ contract LendingPoolV2Hedera is LendingPoolV2, HederaScheduleService {
 
         uint256 desiredTime = block.timestamp + intervalSeconds;
         uint256 scheduledAt = _scheduleNextKeeperCall(marketId, desiredTime);
-        emit KeeperStarted(intervalSeconds, scheduledAt);
+        emit KeeperStarted(marketId, intervalSeconds, scheduledAt);
     }
 
+    /// @notice Run the keeper for a given market
+    /// @param marketId The ID of the market to run the keeper for
     function runKeeper(uint64 marketId) external {
         require(keeperConfigs[marketId].active, "not active");
         keeperConfigs[marketId].callCount += 1;
         keeperConfigs[marketId].lastCallTime = block.timestamp;
 
-        emit KeeperExecuted(block.timestamp, keeperConfigs[marketId].callCount);
+        emit KeeperExecuted(
+            marketId,
+            block.timestamp,
+            keeperConfigs[marketId].callCount
+        );
 
         uint256 desiredTime = block.timestamp +
             keeperConfigs[marketId].intervalSeconds;
+
         _scheduleNextKeeperCall(marketId, desiredTime);
+    }
+
+    function stopKeeper(uint64 marketId) external {
+        if (keeperConfigs[marketId].lastScheduleAddress != address(0)) {
+            address scheduleAddress = keeperConfigs[marketId]
+                .lastScheduleAddress;
+            deleteSchedule(scheduleAddress);
+            keeperConfigs[marketId].lastScheduleAddress = address(0);
+        }
+        keeperConfigs[marketId].active = false;
+        emit KeeperStopped(marketId);
+    }
+
+    function getKeeperConfig(
+        uint64 marketId
+    ) external view returns (KeeperConfig memory) {
+        return keeperConfigs[marketId];
     }
 
     function _scheduleNextKeeperCall(
@@ -109,7 +148,12 @@ contract LendingPoolV2Hedera is LendingPoolV2, HederaScheduleService {
         );
         require(rc == HederaResponseCodes.SUCCESS, "scheduleCall failed");
         keeperConfigs[marketId].lastScheduleAddress = scheduleAddress;
-        emit KeeperScheduled(chosenTime, desiredTime, scheduleAddress);
+        emit KeeperScheduled(
+            marketId,
+            chosenTime,
+            desiredTime,
+            scheduleAddress
+        );
     }
 
     function _findAvailableSecond(
@@ -120,7 +164,7 @@ contract LendingPoolV2Hedera is LendingPoolV2, HederaScheduleService {
         if (hasScheduleCapacity(expiry, gasLimit)) {
             return expiry;
         }
-        bytes32 seed = PrngSystemContract(address(0x169)).getPseudorandomSeed();
+        bytes32 seed = _getPseudorandomSeed();
         for (uint256 i = 0; i < maxProbes; i++) {
             uint256 baseDelay = 2 ** i;
             // forge-lint: disable-next-line(asm-keccak256)
