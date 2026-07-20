@@ -14,6 +14,7 @@ High-level specs and roadmap.
 
 - [DorkFi Base Planning Spec](planning/dorkfi-base-planning-spec.md) — Protocol description, competitive map, Base-focused expansion plan
 - [Base UI Spec](planning/base-ui-spec.md) — Frontend interface for markets, portfolio, liquidation
+- [Chainlink Oracle Integration](planning/chainlink-oracle-integration.md) — Checklist to replace MockOracle with Chainlink Data Feeds on Base
 
 ## Deployment
 

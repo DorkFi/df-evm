@@ -8,6 +8,19 @@
 | Hedera Testnet  | `hedera-testnet`  | `hedera_testnet`| `LendingPoolV2Hedera.s.sol` |
 | Monad Testnet   | `monad-testnet`   | `monad_testnet` | `LendingPoolV2Monad.s.sol` |
 
+## Chainlink oracle (Base)
+
+After markets exist, deploy a production oracle and point the pool at it:
+
+```bash
+# Base mainnet — enable sequencer check; set market IDs to match createMarket order
+ENABLE_SEQUENCER=1 POOL_ADDRESS=0x... \
+  forge script script/ChainlinkOracleRouter.s.sol:ChainlinkOracleRouterScript \
+  --rpc-url $BASE_RPC_URL --broadcast --private-key $PRIVATE_KEY
+```
+
+See [Chainlink Oracle Integration](../docs/planning/chainlink-oracle-integration.md).
+
 ## Deploy
 
 Use `FOUNDRY_PROFILE=<profile>` so the correct `chain_id` is used (profiles are in `foundry.toml`). `forge script` does not accept `--profile`; set the env var instead.

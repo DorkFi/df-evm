@@ -99,6 +99,20 @@ PRIVATE_KEY=0x... forge script script/LendingPoolV2.s.sol:LendingPoolV2Script \
 
 Deployment order: MockOracle → LendingPoolV2
 
+### Chainlink oracle (optional / next cutover)
+
+ETH/USD on Base Sepolia is live at [`0x4aDC67696bA383F43DD60A9e78F2C97Fbbfc7cb1`](https://sepolia.basescan.org/address/0x4aDC67696bA383F43DD60A9e78F2C97Fbbfc7cb1).
+
+**Do not** point the current mock-token pool at Chainlink until markets use assets with matching feeds (WETH/USDC/cbETH). Deploy the router alone to smoke-test:
+
+```bash
+source .env   # PRIVATE_KEY required
+forge script script/ChainlinkOracleRouter.s.sol:ChainlinkOracleRouterScript \
+  --rpc-url https://sepolia.base.org --broadcast --chain-id 84532
+```
+
+Then `setFeed` for available feeds and, when ready, `POOL_ADDRESS=<pool> ...` to call `setOracle`. Full checklist: [Chainlink Oracle Integration](../planning/chainlink-oracle-integration.md).
+
 ### Known Deployments (Base Sepolia)
 
 | Contract          | Address                                                                                                                         | Tx                                                                                                               |

@@ -141,14 +141,20 @@ Each market has an **NToken** — a non-transferable deposit receipt. NToken nam
 - `src/interfaces/ILendingPoolV2.sol` — interface for NToken balance reads
 - `src/interfaces/IOracleRouter.sol` — oracle interface
 - `src/MockOracle.sol` — mock for testing (Chainlink-style 8 decimals)
+- `src/ChainlinkOracleRouter.sol` — Chainlink AggregatorV3 adapter (production)
+- `src/libraries/ChainlinkFeeds.sol` — known Base feed proxy addresses
 - `src/mocks/MockERC20.sol` — test token
-- `script/LendingPoolV2.s.sol` — deployment script
-- `test/LendingPoolV2.t.sol` — tests
+- `script/LendingPoolV2.s.sol` — deployment script (MockOracle)
+- `script/ChainlinkOracleRouter.s.sol` — deploy Chainlink router + optional `setOracle`
+- `test/LendingPoolV2.t.sol` — pool tests
+- `test/ChainlinkOracleRouter.t.sol` — oracle router tests
 
 ## Deployment
 
-1. Deploy `MockOracle` (or Chainlink oracle adapter)
+1. Deploy `MockOracle` (testnets) or `ChainlinkOracleRouter` (Base / production)
 2. Deploy `LendingPoolV2(oracle)`
 3. Call `createMarket(token, params)` for each ERC20
-4. Set prices via oracle (e.g. `MockOracle.setPrice(marketId, price)`)
+4. Set prices: `MockOracle.setPrice(marketId, price)` **or** `ChainlinkOracleRouter.setFeed(marketId, aggregator)`
 5. Optional: `setOracle(address)` or `setPaused(bool)` for production config
+
+See [Chainlink Oracle Integration](../planning/chainlink-oracle-integration.md) for the cutover checklist.
