@@ -5,21 +5,24 @@
 | Target          | Profile           | RPC endpoint    | Script |
 |-----------------|-------------------|-----------------|--------|
 | Base Sepolia    | `base-sepolia`    | `base_sepolia`  | `LendingPoolV2.s.sol` |
+| Base mainnet    | `base-mainnet`    | `base`          | `LendingPoolV2BaseMainnet.s.sol` |
 | Hedera Testnet  | `hedera-testnet`  | `hedera_testnet`| `LendingPoolV2Hedera.s.sol` |
 | Monad Testnet   | `monad-testnet`   | `monad_testnet` | `LendingPoolV2Monad.s.sol` |
 
 ## Chainlink oracle (Base)
 
-After markets exist, deploy a production oracle and point the pool at it:
+Prefer the all-in-one mainnet script above (`LendingPoolV2BaseMainnet.s.sol`), which deploys pool + router + markets together.
+
+To attach a router to an **existing** pool:
 
 ```bash
 # Base mainnet — enable sequencer check; set market IDs to match createMarket order
 ENABLE_SEQUENCER=1 POOL_ADDRESS=0x... \
   forge script script/ChainlinkOracleRouter.s.sol:ChainlinkOracleRouterScript \
-  --rpc-url $BASE_RPC_URL --broadcast --private-key $PRIVATE_KEY
+  --rpc-url base --broadcast --private-key $PRIVATE_KEY
 ```
 
-See [Chainlink Oracle Integration](../docs/planning/chainlink-oracle-integration.md).
+See [Chainlink Oracle Integration](../docs/planning/chainlink-oracle-integration.md) and [Base mainnet deploy](../docs/deployment/base-mainnet.md).
 
 ## Deploy
 

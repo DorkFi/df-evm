@@ -15,6 +15,10 @@ library ChainlinkFeeds {
     /// @dev USDC / USD
     address internal constant BASE_USDC_USD = 0x7e860098F58bBFC8648a4311b374B1D669a2bc6B;
 
+    /// @dev BTC / USD (use for cbBTC until a dedicated cbBTC/USD feed is preferred)
+    /// @dev https://data.chain.link/feeds/base/base/btc-usd
+    address internal constant BASE_BTC_USD = 0x852aE0B1Af1aAeDB0fC4428B4B24420780976ca8;
+
     /// @dev cbETH / USD
     address internal constant BASE_CBETH_USD = 0xd7818272B9e248357d13057AAb0B417aF31E817d;
 
