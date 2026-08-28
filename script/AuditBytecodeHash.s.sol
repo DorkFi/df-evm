@@ -4,6 +4,8 @@ pragma solidity ^0.8.13;
 import {Script, console2} from "forge-std/Script.sol";
 import {LendingPoolV2} from "../src/LendingPoolV2.sol";
 import {NToken} from "../src/NToken.sol";
+import {SToken} from "../src/SToken.sol";
+import {FixedPriceFeed} from "../src/FixedPriceFeed.sol";
 import {DorkFiDeployLib} from "../src/deploy/DorkFiDeployLib.sol";
 import {MockOracle} from "../src/MockOracle.sol";
 
@@ -13,7 +15,7 @@ contract AuditBytecodeHashScript is Script {
     function run() external {
         address admin = makeAddr("audit-freeze-admin");
 
-        console2.log("=== DorkFi audit bytecode freeze (pool + NToken) ===");
+        console2.log("=== DorkFi audit bytecode freeze ===");
 
         console2.log("LendingPoolV2 creation code hash:");
         console2.logBytes32(keccak256(type(LendingPoolV2).creationCode));
@@ -21,7 +23,12 @@ contract AuditBytecodeHashScript is Script {
         console2.log("NToken creation code hash:");
         console2.logBytes32(keccak256(type(NToken).creationCode));
 
-        // Proxy stack (OZ TransparentUpgradeableProxy + ProxyAdmin — dependency, not custom code).
+        console2.log("SToken creation code hash:");
+        console2.logBytes32(keccak256(type(SToken).creationCode));
+
+        console2.log("FixedPriceFeed creation code hash:");
+        console2.logBytes32(keccak256(type(FixedPriceFeed).creationCode));
+
         MockOracle oracle = new MockOracle();
         DorkFiDeployLib.PoolProxyDeployment memory d =
             DorkFiDeployLib.deployPoolProxy(address(oracle), admin);

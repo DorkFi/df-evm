@@ -26,9 +26,9 @@ Complete before external audit kickoff. Mark each item **Pass**, **Fail**, or **
 - [x] Health factor uses liquidation threshold for liquidation eligibility — unit + fuzz tests
 - [x] Close factor caps partial liquidation — unit tests
 - [x] Cross-market liquidation — unit + fuzz tests
-- [x] SToken markets cannot be used as collateral — code + not enabled at launch
+- [x] SToken markets cannot be used as collateral — code + WAD enabled at launch
 
-**Automated:** `forge test --match-contract LendingPoolV2Fuzz`, liquidation tests in `LendingPoolV2.t.sol`
+**Automated:** `test/LendingPoolV2Fuzz.t.sol`, `test/SToken.t.sol`, `test/BaseLaunchFork.t.sol` (WAD borrow/repay)
 
 ## 4. Pause behavior
 
