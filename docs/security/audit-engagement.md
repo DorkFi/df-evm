@@ -7,7 +7,7 @@ Operational checklist for engaging an external security firm. Engineering prepar
 - [x] Vendor engaged: **Entersoft** (Paul Kang) — $17.5k–$25k USDC, ~4 weeks incl. remediation
 - [ ] Complete [internal-review-checklist.md](./internal-review-checklist.md) manual sign-off
 - [ ] All tests green: `forge test --no-match-contract Fork`
-- [ ] Freeze commit tagged: `audit-freeze-v1` (see [AUDIT-FREEZE.md](./AUDIT-FREEZE.md))
+- [x] Freeze commit tagged: `audit-freeze-v1` at `e92371e` (push tag: `git push origin audit-freeze-v1`)
 - [ ] Run bytecode hash script and attach output to vendor packet
 - [x] Share [audit-scope.md](./audit-scope.md) + README in `docs/security/`
 - [ ] GitHub read access: `@entersoftaudits`, `@entersoft-audits`

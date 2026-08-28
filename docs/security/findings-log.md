@@ -42,4 +42,4 @@ _Add rows when auditor report is received._
 | Low | 0 | 0 | 0 |
 | Informational | 0 | 1 | 0 |
 
-**Last updated:** Phase 3 implementation — internal automated review complete; external audit pending vendor engagement.
+**Last updated:** Pre-freeze commit `e92371e` — Entersoft engagement; automated internal review complete.
