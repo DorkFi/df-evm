@@ -10,5 +10,17 @@
       "name": "main",
       "rev": "c64542c52f2a467cc7bcb73ffce712544b3f633e"
     }
+  },
+  "lib/openzeppelin-contracts": {
+    "tag": {
+      "name": "v5.1.0",
+      "rev": "69c8def5f222ff96f2b5beff05dfba996368aa79"
+    }
+  },
+  "lib/openzeppelin-contracts-upgradeable": {
+    "tag": {
+      "name": "v5.1.0",
+      "rev": "fa525310e45f91eb20a6d3baa2644be8e0adba31"
+    }
   }
 }

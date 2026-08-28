@@ -5,6 +5,8 @@ import {IOracleRouter} from "./interfaces/IOracleRouter.sol";
 import {IERC20Permit} from "./interfaces/IERC20Permit.sol";
 import {ISToken} from "./interfaces/ISToken.sol";
 import {NToken} from "./NToken.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {Roles} from "./access/Roles.sol";
 
 interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
@@ -22,7 +24,7 @@ interface IERC20Metadata {
 
 /// @title LendingPoolV2
 /// @notice Phase 1: Multi-market ERC20 lending with scaled accounting, interest, oracle, health factor, liquidation
-contract LendingPoolV2 {
+contract LendingPoolV2 is AccessControl {
     uint256 public constant SCALE = 1e18;
     uint256 public constant BPS = 10000;
     uint256 public constant SECONDS_PER_YEAR = 365 days;
@@ -87,7 +89,8 @@ contract LendingPoolV2 {
     mapping(address => GlobalUserData) public globalUsers;
 
     IOracleRouter public oracle;
-    address public owner;
+    address public treasury;
+    bool private _initialized;
     bool public paused;
 
     event MarketCreated(uint64 indexed marketId, address token);
@@ -137,27 +140,51 @@ contract LendingPoolV2 {
     error StokenMarketCannotBeCollateral();
     error InsufficientReserves();
 
-    modifier onlyOwner() {
-        if (msg.sender != owner) revert Unauthorized();
-        _;
-    }
-
     modifier whenNotPaused() {
         if (paused) revert ProtocolPaused();
         _;
     }
 
-    constructor(address _oracle) {
-        oracle = IOracleRouter(_oracle);
-        owner = msg.sender;
-        stokenMarketId = type(uint64).max; // no SToken market by default
+    /// @dev Sentinel `_oracle` for implementation-only deploy (locks contract, no pool state).
+    address private constant IMPLEMENTATION_LOCK = address(0xdead);
+
+    /// @notice Deploy pool directly (testnets, Hedera) or lock implementation for proxy use.
+    /// @param _oracle Oracle router. Pass `IMPLEMENTATION_LOCK` (0xdead) to deploy uninitialized implementation.
+    /// @param admin Admin receiving roles. Ignored when deploying implementation lock.
+    constructor(address _oracle, address admin) {
+        if (_oracle == IMPLEMENTATION_LOCK) {
+            _initialized = true;
+            return;
+        }
+        _initPool(_oracle, admin);
     }
+
+    /// @notice Initialize pool state on a proxy (TransparentUpgradeableProxy).
+    function initialize(address _oracle, address admin) external {
+        _initPool(_oracle, admin);
+    }
+
+    function _initPool(address _oracle, address admin) internal {
+        if (_initialized) revert AlreadyInitialized();
+        if (admin == address(0)) revert ZeroAdmin();
+        _initialized = true;
+        oracle = IOracleRouter(_oracle);
+        treasury = admin;
+        stokenMarketId = type(uint64).max;
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(Roles.POOL_ADMIN_ROLE, admin);
+        _grantRole(Roles.PAUSER_ROLE, admin);
+        _grantRole(Roles.ORACLE_ADMIN_ROLE, admin);
+    }
+
+    error AlreadyInitialized();
+    error ZeroAdmin();
 
     /// @notice Create a new ERC20 market. NToken name/symbol/decimals are bootstrapped from the underlying token.
     function createMarket(
         address token,
         MarketParams calldata params
-    ) external onlyOwner returns (uint64 marketId) {
+    ) external onlyRole(Roles.POOL_ADMIN_ROLE) returns (uint64 marketId) {
         uint64 existingId = marketIdByToken[token];
         if (
             markets[existingId].exists &&
@@ -190,7 +217,7 @@ contract LendingPoolV2 {
     }
 
     /// @notice Set the borrow-only SToken market ID (owner only). Use type(uint64).max to clear.
-    function setStokenMarketId(uint64 marketId) external onlyOwner {
+    function setStokenMarketId(uint64 marketId) external onlyRole(Roles.POOL_ADMIN_ROLE) {
         if (marketId != type(uint64).max && !markets[marketId].exists)
             revert MarketNotFound();
         stokenMarketId = marketId;
@@ -202,13 +229,13 @@ contract LendingPoolV2 {
     }
 
     /// @notice Set protocol pause state (owner only)
-    function setPaused(bool _paused) external onlyOwner {
+    function setPaused(bool _paused) external onlyRole(Roles.PAUSER_ROLE) {
         paused = _paused;
         emit PauseSet(_paused);
     }
 
     /// @notice Set market pause state (owner only)
-    function setMarketPaused(uint64 marketId, bool _paused) external onlyOwner {
+    function setMarketPaused(uint64 marketId, bool _paused) external onlyRole(Roles.PAUSER_ROLE) {
         MarketData storage m = markets[marketId];
         if (!m.exists) revert MarketNotFound();
         m.paused = _paused;
@@ -219,7 +246,7 @@ contract LendingPoolV2 {
     function setMaxTotalDeposits(
         uint64 marketId,
         uint256 _maxTotalDeposits
-    ) external onlyOwner {
+    ) external onlyRole(Roles.POOL_ADMIN_ROLE) {
         MarketData storage m = markets[marketId];
         if (!m.exists) revert MarketNotFound();
         m.maxTotalDeposits = _maxTotalDeposits;
@@ -229,26 +256,32 @@ contract LendingPoolV2 {
     function setMaxTotalBorrows(
         uint64 marketId,
         uint256 _maxTotalBorrows
-    ) external onlyOwner {
+    ) external onlyRole(Roles.POOL_ADMIN_ROLE) {
         MarketData storage m = markets[marketId];
         if (!m.exists) revert MarketNotFound();
         m.maxTotalBorrows = _maxTotalBorrows;
     }
 
-    /// @notice Withdraw accrued reserves for a market. For SToken (borrow-only) market, mints to owner; otherwise transfers from pool.
+    /// @notice Withdraw accrued reserves for a market. For SToken (borrow-only) market, mints to treasury; otherwise transfers from pool.
     function withdrawReserves(
         uint64 marketId,
         uint256 amount
-    ) external onlyOwner {
+    ) external onlyRole(Roles.POOL_ADMIN_ROLE) {
         MarketData storage m = markets[marketId];
         if (!m.exists) revert MarketNotFound();
         if (amount > m.reserves) revert InsufficientReserves();
         m.reserves -= amount;
         if (_isStokenMarket(marketId)) {
-            ISToken(address(m.token)).mint(owner, amount);
+            ISToken(address(m.token)).mint(treasury, amount);
         } else {
-            _push(marketId, owner, amount);
+            _push(marketId, treasury, amount);
         }
+    }
+
+    /// @notice Set treasury address for reserve withdrawals (POOL_ADMIN).
+    function setTreasury(address newTreasury) external onlyRole(Roles.POOL_ADMIN_ROLE) {
+        if (newTreasury == address(0)) revert ZeroAdmin();
+        treasury = newTreasury;
     }
 
     /// @notice Ensure payment for fetch price feed (from user)
@@ -1615,7 +1648,7 @@ contract LendingPoolV2 {
         return totalDeposits - totalBorrows;
     }
 
-    function setOracle(address newOracle) external onlyOwner {
+    function setOracle(address newOracle) external onlyRole(Roles.ORACLE_ADMIN_ROLE) {
         oracle = IOracleRouter(newOracle);
     }
 }

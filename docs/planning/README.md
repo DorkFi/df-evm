@@ -4,3 +4,4 @@ High-level protocol specs and roadmap. Use these docs for strategic direction an
 
 - [DorkFi Base Planning Spec](dorkfi-base-planning-spec.md)
 - [Base UI Spec](base-ui-spec.md)
+- [Chainlink Oracle Integration](chainlink-oracle-integration.md)

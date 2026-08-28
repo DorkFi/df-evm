@@ -9,6 +9,7 @@
 | Target          | Profile           | RPC endpoint    |
 |-----------------|-------------------|-----------------|
 | Base Sepolia    | `base-sepolia`    | `base_sepolia`  |
+| Base mainnet    | `base-mainnet`    | `base`          |
 | Hedera Testnet  | `hedera-testnet`  | `hedera_testnet`|
 | Monad Testnet   | `monad-testnet`   | `monad_testnet` |
 | 0G Testnet      | `og-testnet`      | `og_testnet`    |
@@ -85,6 +86,30 @@ FOUNDRY_PROFILE=og-testnet forge script script/LendingPoolV2OG.s.sol:LendingPool
 
 ---
 
+## Base mainnet (production)
+
+Canonical USDC / WETH / cbBTC + WAD. See [base-mainnet.md](../docs/deployment/base-mainnet.md).
+
+```bash
+source .env
+FOUNDRY_PROFILE=base-mainnet forge script \
+  script/LendingPoolV2BaseMainnet.s.sol:LendingPoolV2BaseMainnetScript \
+  --rpc-url base \
+  --broadcast \
+  --private-key $PRIVATE_KEY \
+  --sender $(cast wallet address $PRIVATE_KEY)
+```
+
+Dry run (no `--broadcast`):
+
+```bash
+FOUNDRY_PROFILE=base-mainnet forge script \
+  script/LendingPoolV2BaseMainnet.s.sol:LendingPoolV2BaseMainnetScript \
+  --rpc-url base
+```
+
+---
+
 ## Dry run (no broadcast)
 
 Same commands without `--broadcast`. Simulates and logs transactions.
@@ -132,6 +157,21 @@ Or inline:
 
 ```bash
 forge script script/Deploy.s.sol:DeployScript --rpc-url base_sepolia --broadcast --private-key 0x... --sender 0x<address_for_that_key>
+```
+
+---
+
+## Add ETH market (existing deployment)
+
+After the pool is live, add a mintable ETH test market with `script/AddEthMarket.s.sol`. See [add-eth-market.md](../docs/deployment/add-eth-market.md) for pool/oracle addresses per network and UI update steps.
+
+```bash
+source .env
+LENDING_POOL_ADDRESS=0x8045c02eCd91E8ff98BE8B49277730c0781D2215 \
+ORACLE_ADDRESS=0x74F6246AF46d21D1bC68a57A5934A42BB4F8EBdD \
+FOUNDRY_PROFILE=base-sepolia forge script script/AddEthMarket.s.sol:AddEthMarketScript \
+  --rpc-url base_sepolia --broadcast \
+  --private-key $PRIVATE_KEY --sender $(cast wallet address $PRIVATE_KEY)
 ```
 
 ---

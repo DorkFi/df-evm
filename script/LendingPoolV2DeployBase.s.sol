@@ -17,10 +17,12 @@ abstract contract LendingPoolV2DeployBase is Script {
         address aTokenUsdc;
         address aTokenCbBtc;
         address aTokenEurc;
+        address aTokenEth;
         address stokenWad;
         uint64 marketIdUsdc;
         uint64 marketIdCbBtc;
         uint64 marketIdEurc;
+        uint64 marketIdEth;
         uint64 marketIdStoken;
     }
 
@@ -34,6 +36,40 @@ abstract contract LendingPoolV2DeployBase is Script {
             closeFactorBps: 5000,
             liquidationBonusBps: 500
         });
+    }
+
+    /// @dev Oracle price for ETH in 8 decimals (default $3000). Override with ETH_PRICE_USD env var.
+    function _ethOraclePrice() internal view returns (uint256) {
+        return vm.envOr("ETH_PRICE_USD", uint256(3000e8));
+    }
+
+    /// @dev Deploy mintable ETH AToken, register market, set oracle price and deposit/borrow limits.
+    function _deployAndConfigureEthMarket(
+        LendingPoolV2 pool,
+        MockOracle oracle
+    ) internal returns (address aTokenEth, uint64 marketIdEth) {
+        AToken eth = new AToken("Ether", "ETH", 18, 0);
+        aTokenEth = address(eth);
+        marketIdEth = pool.createMarket(aTokenEth, _defaultMarketParams());
+        oracle.setPrice(marketIdEth, _ethOraclePrice());
+        pool.setMaxTotalDeposits(marketIdEth, type(uint256).max);
+        pool.setMaxTotalBorrows(marketIdEth, type(uint256).max);
+    }
+
+    function _logEthMarketResult(
+        address poolAddr,
+        address aTokenEth,
+        uint64 marketIdEth
+    ) internal pure {
+        console.log("");
+        console.log("=== ETH market added ===");
+        console.log("Pool            ", poolAddr);
+        console.log("AToken_ETH      ", aTokenEth);
+        console.log("marketId_ETH    ", marketIdEth);
+        console.log("");
+        console.log("--- chains.ts snippet ---");
+        console.log('atokens: { eth: "%s" }', aTokenEth);
+        console.log('tokens: { "%s": { symbol: "ETH", decimals: 18 } }', aTokenEth);
     }
 
     /// @dev Deploys aTokens, creates markets, sets oracle prices and limits. Call inside vm.startBroadcast/stopBroadcast.
@@ -57,6 +93,8 @@ abstract contract LendingPoolV2DeployBase is Script {
         r.marketIdUsdc = pool.createMarket(address(usdc), params);
         r.marketIdCbBtc = pool.createMarket(address(cbBtc), params);
         r.marketIdEurc = pool.createMarket(address(eurc), params);
+
+        (r.aTokenEth, r.marketIdEth) = _deployAndConfigureEthMarket(pool, oracle);
 
         uint64 nextMarketId = pool.totalMarkets();
         SToken stoken = new SToken(
@@ -92,11 +130,13 @@ abstract contract LendingPoolV2DeployBase is Script {
         console.log("AToken_USDC     ", r.aTokenUsdc);
         console.log("AToken_cbBTC    ", r.aTokenCbBtc);
         console.log("AToken_EURC     ", r.aTokenEurc);
+        console.log("AToken_ETH      ", r.aTokenEth);
         console.log("SToken_WAD      ", r.stokenWad);
         console.log("--- Market IDs ---");
         console.log("marketId_USDC   ", r.marketIdUsdc);
         console.log("marketId_cbBTC  ", r.marketIdCbBtc);
         console.log("marketId_EURC   ", r.marketIdEurc);
+        console.log("marketId_ETH    ", r.marketIdEth);
         console.log("marketId_WAD    ", r.marketIdStoken);
     }
 }

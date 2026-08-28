@@ -33,7 +33,28 @@ This document describes how to deploy DorkFi LendingPoolV2 and MockOracle to Bas
 
 ---
 
-## 2) Deploy & Setup (Quick Start)
+## Phase 2 dress rehearsal (canonical markets)
+
+Script: [`script/LendingPoolV2BaseSepolia.s.sol`](../../script/LendingPoolV2BaseSepolia.s.sol)
+
+Deploys proxy pool + Chainlink router (ETH/USD live; USDC/cbBTC via `FixedPriceFeed`; mock cbBTC token).
+
+```bash
+source .env
+FOUNDRY_PROFILE=base-sepolia forge script \
+  script/LendingPoolV2BaseSepolia.s.sol:LendingPoolV2BaseSepoliaScript \
+  --rpc-url base_sepolia --broadcast --private-key $PRIVATE_KEY
+```
+
+Fork E2E (no broadcast required):
+
+```bash
+forge test --match-contract BaseSepoliaDressRehearsalForkTest -vv
+```
+
+---
+
+## 2) Deploy & Setup (Quick Start) — legacy mock-token pool
 
 **Prerequisites:** Create `.env` with `PRIVATE_KEY=0x...` (your deployer private key).
 
@@ -98,6 +119,20 @@ PRIVATE_KEY=0x... forge script script/LendingPoolV2.s.sol:LendingPoolV2Script \
 | **LendingPoolV2** | Core lending pool; receives oracle address in constructor      |
 
 Deployment order: MockOracle → LendingPoolV2
+
+### Chainlink oracle (optional / next cutover)
+
+ETH/USD on Base Sepolia is live at [`0x4aDC67696bA383F43DD60A9e78F2C97Fbbfc7cb1`](https://sepolia.basescan.org/address/0x4aDC67696bA383F43DD60A9e78F2C97Fbbfc7cb1).
+
+**Do not** point the current mock-token pool at Chainlink until markets use assets with matching feeds (WETH/USDC/cbETH). Deploy the router alone to smoke-test:
+
+```bash
+source .env   # PRIVATE_KEY required
+forge script script/ChainlinkOracleRouter.s.sol:ChainlinkOracleRouterScript \
+  --rpc-url https://sepolia.base.org --broadcast --chain-id 84532
+```
+
+Then `setFeed` for available feeds and, when ready, `POOL_ADDRESS=<pool> ...` to call `setOracle`. Full checklist: [Chainlink Oracle Integration](../planning/chainlink-oracle-integration.md).
 
 ### Known Deployments (Base Sepolia)
 

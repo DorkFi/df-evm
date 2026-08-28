@@ -1,1 +1,2 @@
 @hashgraph/smart-contracts/=lib/hedera-smart-contracts/
+@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
