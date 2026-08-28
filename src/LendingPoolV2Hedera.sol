@@ -56,7 +56,7 @@ contract LendingPoolV2Hedera is LendingPoolV2, HederaScheduleService {
     // -------------------------------------------------------------------------
     // Constructor
     // -------------------------------------------------------------------------
-    constructor(address _oracle) payable LendingPoolV2(_oracle) {}
+    constructor(address _oracle) payable LendingPoolV2(_oracle, msg.sender) {}
     receive() external payable {}
 
     function _getPseudorandomSeed() internal returns (bytes32 seed) {
@@ -67,6 +67,11 @@ contract LendingPoolV2Hedera is LendingPoolV2, HederaScheduleService {
         );
         require(ok && ret.length >= 32, "PRNG unavailable");
         seed = abi.decode(ret, (bytes32));
+    }
+
+    /// @dev Test helper exposing PRNG precompile call.
+    function testGetPseudorandomSeed() external returns (uint256) {
+        return uint256(_getPseudorandomSeed());
     }
 
     // -------------------------------------------------------------------------

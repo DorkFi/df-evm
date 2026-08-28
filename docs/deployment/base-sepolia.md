@@ -33,7 +33,28 @@ This document describes how to deploy DorkFi LendingPoolV2 and MockOracle to Bas
 
 ---
 
-## 2) Deploy & Setup (Quick Start)
+## Phase 2 dress rehearsal (canonical markets)
+
+Script: [`script/LendingPoolV2BaseSepolia.s.sol`](../../script/LendingPoolV2BaseSepolia.s.sol)
+
+Deploys proxy pool + Chainlink router (ETH/USD live; USDC/cbBTC via `FixedPriceFeed`; mock cbBTC token).
+
+```bash
+source .env
+FOUNDRY_PROFILE=base-sepolia forge script \
+  script/LendingPoolV2BaseSepolia.s.sol:LendingPoolV2BaseSepoliaScript \
+  --rpc-url base_sepolia --broadcast --private-key $PRIVATE_KEY
+```
+
+Fork E2E (no broadcast required):
+
+```bash
+forge test --match-contract BaseSepoliaDressRehearsalForkTest -vv
+```
+
+---
+
+## 2) Deploy & Setup (Quick Start) — legacy mock-token pool
 
 **Prerequisites:** Create `.env` with `PRIVATE_KEY=0x...` (your deployer private key).
 

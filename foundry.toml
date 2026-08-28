@@ -6,6 +6,11 @@ via_ir = true
 optimizer = true
 optimizer_runs = 200
 
+[invariant]
+runs = 256
+depth = 50
+fail_on_revert = false
+
 [profile.ci]
 src = "src"
 out = "out"

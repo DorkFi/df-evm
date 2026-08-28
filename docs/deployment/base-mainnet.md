@@ -13,6 +13,13 @@ Script: [`script/LendingPoolV2BaseMainnet.s.sol`](../../script/LendingPoolV2Base
    ```
 3. Confirm Chainlink feed addresses in [`src/libraries/ChainlinkFeeds.sol`](../../src/libraries/ChainlinkFeeds.sol) against [Chainlink docs](https://docs.chain.link/data-feeds/price-feeds/addresses?network=base).
 
+## Phase 1 (RBAC + proxy + timelock)
+
+- **Pool** deploys behind `TransparentUpgradeableProxy` via [`src/deploy/DorkFiDeployLib.sol`](../../src/deploy/DorkFiDeployLib.sol).
+- **Roles** (`src/access/Roles.sol`): `POOL_ADMIN_ROLE`, `PAUSER_ROLE`, `ORACLE_ADMIN_ROLE`, plus `DEFAULT_ADMIN_ROLE`.
+- **Timelock** (optional): set `USE_TIMELOCK=1` and `TIMELOCK_ADMIN=<multisig>` (48h default delay).
+- **Direct testnet deploys** (Sepolia/Hedera/Monad): still use `new LendingPoolV2(oracle, msg.sender)` without proxy.
+
 ## Market order (IDs)
 
 | ID | Asset | Token | Oracle feed |
@@ -23,6 +30,19 @@ Script: [`script/LendingPoolV2BaseMainnet.s.sol`](../../script/LendingPoolV2Base
 | 3 | WAD | deployed `SToken` | `FixedPriceFeed` @ `$1` (8 decimals) |
 
 WAD is borrow-only (`setStokenMarketId`). Default deposit cap is `0`; borrow cap is unlimited unless overridden.
+
+## Soft-launch caps (defaults)
+
+Defined in [`src/libraries/BaseMarketParams.sol`](../../src/libraries/BaseMarketParams.sol). Used by default when `USE_SOFT_LAUNCH_CAPS=1` (default).
+
+| Market | Max deposits | Max borrows |
+|--------|--------------|-------------|
+| USDC | 1,000,000 (6 dec) | 500,000 |
+| WETH | 100 | 50 |
+| cbBTC | 1 (8 dec) | 0.5 |
+| WAD | 0 (borrow-only) | 1,000,000 |
+
+Override via `MAX_TOTAL_DEPOSITS_*` / `MAX_TOTAL_BORROWS_*` env vars, or set `USE_SOFT_LAUNCH_CAPS=0` for unlimited.
 
 ## Dry run
 

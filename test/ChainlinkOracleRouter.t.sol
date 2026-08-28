@@ -3,6 +3,8 @@ pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
 import {ChainlinkOracleRouter} from "../src/ChainlinkOracleRouter.sol";
+import {Roles} from "../src/access/Roles.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {MockAggregatorV3} from "../src/mocks/MockAggregatorV3.sol";
 import {ChainlinkFeeds} from "../src/libraries/ChainlinkFeeds.sol";
 import {AggregatorV3Interface} from "../src/interfaces/AggregatorV3Interface.sol";
@@ -19,7 +21,7 @@ contract ChainlinkOracleRouterTest is Test {
         // Foundry default timestamp is too low for (timestamp - age) math.
         vm.warp(1_700_000_000);
 
-        router = new ChainlinkOracleRouter();
+        router = new ChainlinkOracleRouter(address(this));
         ethUsd = new MockAggregatorV3(8, 3000e8); // $3000
         usdcUsd = new MockAggregatorV3(8, 1e8); // $1
 
@@ -126,26 +128,45 @@ contract ChainlinkOracleRouterTest is Test {
         assertEq(price, 3000e8);
     }
 
-    function test_onlyOwner_guards() public {
+    function test_onlyRole_guards() public {
         address stranger = address(0xBEEF);
+        bytes32 adminRole = router.DEFAULT_ADMIN_ROLE();
+
         vm.startPrank(stranger);
-        vm.expectRevert(ChainlinkOracleRouter.Unauthorized.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                stranger,
+                Roles.ORACLE_ADMIN_ROLE
+            )
+        );
         router.setFeed(ETH_MARKET, address(ethUsd));
-        vm.expectRevert(ChainlinkOracleRouter.Unauthorized.selector);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                stranger,
+                Roles.ORACLE_ADMIN_ROLE
+            )
+        );
         router.setMaxPriceAge(1);
-        vm.expectRevert(ChainlinkOracleRouter.Unauthorized.selector);
-        router.setSequencerUptimeFeed(address(0));
-        vm.expectRevert(ChainlinkOracleRouter.Unauthorized.selector);
-        router.transferOwnership(stranger);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                stranger,
+                adminRole
+            )
+        );
+        router.grantRole(adminRole, stranger);
         vm.stopPrank();
     }
 
-    function test_transferOwnership() public {
-        address newOwner = address(0xABCD);
-        router.transferOwnership(newOwner);
-        assertEq(router.owner(), newOwner);
+    function test_grantOracleAdminRole() public {
+        address newAdmin = address(0xABCD);
+        router.grantRole(Roles.ORACLE_ADMIN_ROLE, newAdmin);
 
-        vm.prank(newOwner);
+        vm.prank(newAdmin);
         router.setMaxPriceAge(30 minutes);
         assertEq(router.maxPriceAge(), 30 minutes);
     }
@@ -172,7 +193,7 @@ contract ChainlinkOracleRouterForkTest is Test {
     }
 
     function testFork_routerReadsEthUsd() public {
-        ChainlinkOracleRouter router = new ChainlinkOracleRouter();
+        ChainlinkOracleRouter router = new ChainlinkOracleRouter(address(this));
         router.setFeed(0, ChainlinkFeeds.BASE_ETH_USD);
         // Sequencer may be within grace depending on feed state; disable for price read smoke.
         // Production deploys should enable BASE_SEQUENCER_UPTIME.

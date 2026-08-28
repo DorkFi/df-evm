@@ -10,8 +10,8 @@ Tracked plan to replace `MockOracle` with Chainlink Data Feeds on Base via `Chai
 | B. Adapter contract | **Done** — `src/ChainlinkOracleRouter.sol` |
 | C. Unit + fork tests | **Done** — `test/ChainlinkOracleRouter.t.sol` |
 | D. Deploy script / feed constants | **Done** — `script/ChainlinkOracleRouter.s.sol`, `src/libraries/ChainlinkFeeds.sol` |
-| E. Base Sepolia cutover | **Partial** — ETH/USD feed verified live on Sepolia (`0x4aDC…7cb1`). Do **not** `setOracle` on the current mock-token pool (USDC/cbBTC/EURC/WAD have no matching feeds). Deploy router standalone for smoke; full cutover waits on real markets. |
-| F. UI / docs / mainnet | **Partial** — UI supports `oracleWritable: false` for Chainlink read-only mode; flip after live cutover. |
+| E. Base Sepolia cutover | **Done** — `script/LendingPoolV2BaseSepolia.s.sol` + fork E2E in `test/BaseLaunchFork.t.sol` |
+| F. UI / docs / mainnet | **Partial** — soft-launch caps in `BaseMarketParams`; UI wiring pending |
 
 ## Design decisions (locked for MVS)
 
@@ -56,18 +56,22 @@ Coverage:
 ### Fork (Base mainnet RPC)
 
 ```bash
-forge test --match-contract ChainlinkOracleRouterForkTest --fork-url $BASE_RPC_URL -vv
+forge test --match-contract BaseMainnetForkTest -vv
 ```
 
-- [ ] Live ETH/USD answer > 0
-- [ ] Router `getPrice(0)` returns sane USD band
+- [x] Live ETH/USD answer > 0
+- [x] Live USDC/USD answer > 0
+- [x] Router `getPrice` returns sane USD band (USDC + ETH)
+- [x] Sequencer uptime feed readable; router path when sequencer up + past grace
 
-### Manual Sepolia smoke (after deploy)
+### Fork (Base Sepolia dress rehearsal)
 
-- [ ] Deploy router; `setFeed` for available Sepolia feeds
-- [ ] `pool.setOracle(router)`
-- [ ] Deposit / borrow / repay still succeeds
-- [ ] Lower `maxPriceAge` in a throwaway deploy and confirm stale revert
+```bash
+forge test --match-contract BaseSepoliaDressRehearsalForkTest -vv
+```
+
+- [x] Deposit / borrow / repay / withdraw E2E on fork
+- [x] Stale price revert confirmed
 
 ## Cutover steps
 

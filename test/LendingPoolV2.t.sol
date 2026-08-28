@@ -39,7 +39,7 @@ contract LendingPoolV2Test is Test {
         bob = vm.addr(BOB_PRIVATE_KEY);
         
         oracle = new MockOracle();
-        pool = new LendingPoolV2(address(oracle));
+        pool = new LendingPoolV2(address(oracle), address(this));
 
         usdc = new MockERC20("USDC", "USDC", 18);
         weth = new MockERC20("WETH", "WETH", 18);
@@ -388,7 +388,7 @@ contract LendingPoolV2Test is Test {
     /// @notice Tests getMaxBorrow with USDC (6 decimals) and cbBTC (8 decimals) - mixed decimal markets
     function test_GetMaxBorrow_Usdc6CbBtc8() public {
         MockOracle oracle2 = new MockOracle();
-        LendingPoolV2 pool2 = new LendingPoolV2(address(oracle2));
+        LendingPoolV2 pool2 = new LendingPoolV2(address(oracle2), address(this));
 
         MockERC20 usdc6 = new MockERC20("USDC", "USDC", 6);
         MockERC20 cbBtc8 = new MockERC20("cbBTC", "cbBTC", 8);
@@ -439,7 +439,7 @@ contract LendingPoolV2Test is Test {
     /// @notice Replicates UI scenario: ~$78 collateral (5 USDC + 0.0007 cbBTC + 3 EURC) → ~$62 max borrow in USDC
     function test_GetMaxBorrow_MixedDecimals_78DollarsCollateral() public {
         MockOracle oracle2 = new MockOracle();
-        LendingPoolV2 pool2 = new LendingPoolV2(address(oracle2));
+        LendingPoolV2 pool2 = new LendingPoolV2(address(oracle2), address(this));
 
         MockERC20 usdc6 = new MockERC20("USDC", "USDC", 6);
         MockERC20 cbBtc8 = new MockERC20("cbBTC", "cbBTC", 8);
@@ -491,7 +491,7 @@ contract LendingPoolV2Test is Test {
     /// @notice With ~$1 borrowed, max borrow should decrease accordingly
     function test_GetMaxBorrow_ReducesAfterBorrow() public {
         MockOracle oracle2 = new MockOracle();
-        LendingPoolV2 pool2 = new LendingPoolV2(address(oracle2));
+        LendingPoolV2 pool2 = new LendingPoolV2(address(oracle2), address(this));
 
         MockERC20 usdc6 = new MockERC20("USDC", "USDC", 6);
         usdc6.mint(alice, 1_000_000e6);

@@ -60,7 +60,7 @@ contract ChainlinkOracleRouterScript is Script {
 
         vm.startBroadcast();
 
-        ChainlinkOracleRouter router = new ChainlinkOracleRouter();
+        ChainlinkOracleRouter router = new ChainlinkOracleRouter(msg.sender);
         router.setMaxPriceAge(maxPriceAge);
 
         if (ethFeed != address(0)) {

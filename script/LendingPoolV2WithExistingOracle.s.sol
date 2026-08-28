@@ -14,7 +14,7 @@ contract LendingPoolV2WithExistingOracleScript is Script {
 
         vm.startBroadcast();
 
-        LendingPoolV2 pool = new LendingPoolV2(oracleAddr);
+        LendingPoolV2 pool = new LendingPoolV2(oracleAddr, msg.sender);
         console.log("LendingPoolV2 deployed at:", address(pool));
 
         vm.stopBroadcast();

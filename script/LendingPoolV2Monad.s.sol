@@ -12,7 +12,7 @@ contract LendingPoolV2MonadScript is LendingPoolV2DeployBase {
         vm.startBroadcast();
 
         MockOracle oracle = new MockOracle();
-        LendingPoolV2 pool = new LendingPoolV2(address(oracle));
+        LendingPoolV2 pool = new LendingPoolV2(address(oracle), msg.sender);
 
         DeployResult memory r = _deployAndConfigureMarkets(pool, oracle);
 
